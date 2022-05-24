@@ -49,12 +49,12 @@ internal sealed class SerializationContext
         // Create variables
         ParameterExpression value = Expression.Variable(type);
         ParameterExpression iterator = Expression.Variable(typeof(int));
-        var variables = new ParameterExpression[] { value, iterator };
+        var variables = new List<ParameterExpression> { value, iterator };
 
         // Create body
         var expressions = new List<Expression>();
         expressions.Add(Expression.Assign(value, Expression.Convert(valueParameter, type)));
-        AddWriteExpression(new BuildingInfo(expressions, type, value, streamParameter, iterator));
+        AddWriteExpression(new BuildingInfo(expressions, variables, type, value, streamParameter, iterator, null!));
         BlockExpression block = Expression.Block(variables, expressions);
 
         // Compile expressions

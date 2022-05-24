@@ -2,7 +2,7 @@
 
 namespace BinData;
 
-internal record BuildingInfo(List<Expression> Expressions, Type Type, Expression Value, ParameterExpression Stream, ParameterExpression Iterator)
+internal record BuildingInfo(List<Expression> Expressions, List<ParameterExpression> Variables, Type Type, Expression Value, ParameterExpression Stream, ParameterExpression Iterator, ParameterExpression IteratorEnd)
 {
     public void Add(Expression expression)
     {

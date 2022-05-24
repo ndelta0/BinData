@@ -38,12 +38,6 @@ internal static class BinaryStreamWriter
 
     public static unsafe void WritePrimitive<T>(T value, Stream stream) where T : unmanaged
     {
-        if (typeof(T) == typeof(sbyte))
-        {
-            stream.WriteByte((byte)(Unsafe.As<T, sbyte>(ref value) + 128));
-            return;
-        }
-
         if (sizeof(T) == sizeof(byte))
         {
             stream.WriteByte(Unsafe.As<T, byte>(ref value));

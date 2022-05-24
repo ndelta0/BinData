@@ -9,7 +9,7 @@ public class ValueTypeSerializerTests
     {
         const sbyte value = 1;
         var actual = BinaryConvert.Serialize(value);
-        var expected = new byte[] { 0x80 + 0x01 };
+        var expected = new byte[] { 0x01 };
 
         Assert.Equal(expected, actual);
     }
