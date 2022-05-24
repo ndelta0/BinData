@@ -258,12 +258,4 @@ internal sealed class SerializationContext
         info.Add(Expression.Call(info.Stream, _streamWriteByte, _zeroByteExpression));
         info.Add(Expression.Label(endLabel));
     }
-
-    private record BuildingInfo(List<Expression> Expressions, Type Type, Expression Value, ParameterExpression Stream, ParameterExpression Iterator)
-    {
-        public void Add(Expression expression)
-        {
-            Expressions.Add(expression);
-        }
-    }
 }

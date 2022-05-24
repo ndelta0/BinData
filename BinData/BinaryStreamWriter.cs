@@ -14,27 +14,26 @@ internal static class BinaryStreamWriter
         if (sizeof(TEnum) == 1)
         {
             stream.WriteByte(Unsafe.As<TEnum, byte>(ref value));
+            return;
         }
-        else
+
+        Span<byte> buffer = stackalloc byte[sizeof(TEnum)];
+        if (sizeof(TEnum) == 2)
         {
-            Span<byte> buffer = stackalloc byte[sizeof(TEnum)];
-            if (sizeof(TEnum) == 2)
-            {
-                short temp = Unsafe.As<TEnum, short>(ref value);
-                BinaryPrimitives.WriteInt16LittleEndian(buffer, temp);
-            }
-            else if (sizeof(TEnum) == 4)
-            {
-                int temp = Unsafe.As<TEnum, int>(ref value);
-                BinaryPrimitives.WriteInt32LittleEndian(buffer, temp);
-            }
-            else if (sizeof(TEnum) == 8)
-            {
-                long temp = Unsafe.As<TEnum, long>(ref value);
-                BinaryPrimitives.WriteInt64LittleEndian(buffer, temp);
-            }
-            stream.Write(buffer);
+            short temp = Unsafe.As<TEnum, short>(ref value);
+            BinaryPrimitives.WriteInt16LittleEndian(buffer, temp);
         }
+        else if (sizeof(TEnum) == 4)
+        {
+            int temp = Unsafe.As<TEnum, int>(ref value);
+            BinaryPrimitives.WriteInt32LittleEndian(buffer, temp);
+        }
+        else if (sizeof(TEnum) == 8)
+        {
+            long temp = Unsafe.As<TEnum, long>(ref value);
+            BinaryPrimitives.WriteInt64LittleEndian(buffer, temp);
+        }
+        stream.Write(buffer);
     }
 
     public static unsafe void WritePrimitive<T>(T value, Stream stream) where T : unmanaged

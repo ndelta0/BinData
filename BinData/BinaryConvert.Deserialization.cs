@@ -15,9 +15,8 @@ public static partial class BinaryConvert
     {
         using var ms = new MemoryStream(bytes);
 
-        var value = DeserializeInternal(ms, type);
-
-        return value;
+        var context = DeserializationContext.Create(type);
+        return context.Read(ms);
     }
 
     private static object? DeserializeInternal(Stream s, Type type)
