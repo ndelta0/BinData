@@ -12,7 +12,7 @@
         <PackageProjectUrl>https://github.com/ndelta0/BinData</PackageProjectUrl>
         <PackageLicenseUrl>https://choosealicense.com/licenses/mit/</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/ndelta0/BinData</RepositoryUrl>
-        <AssemblyVersion>1.0.0.*</AssemblyVersion>
+        <AssemblyVersion>2.0.0.*</AssemblyVersion>
         <Deterministic>false</Deterministic>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
