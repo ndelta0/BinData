@@ -9,7 +9,7 @@ public class ValueTypeSerializerTests
     {
         const sbyte value = 1;
         var actual = BinaryConvert.Serialize(value);
-        var expected = new byte[] { 0x01, 0x80 + 0x01 };
+        var expected = new byte[] { 0x01 };
 
         Assert.Equal(expected, actual);
     }
@@ -19,7 +19,7 @@ public class ValueTypeSerializerTests
     {
         const byte value = 1;
         var actual = BinaryConvert.Serialize(value);
-        var expected = new byte[] { 0x01, 0x01 };
+        var expected = new byte[] { 0x01 };
 
         Assert.Equal(expected, actual);
     }
@@ -29,7 +29,7 @@ public class ValueTypeSerializerTests
     {
         const short value = 1;
         var actual = BinaryConvert.Serialize(value);
-        var expected = new byte[] { 0x01, 0x01, 0x00 };
+        var expected = new byte[] { 0x01, 0x00 };
 
         Assert.Equal(expected, actual);
     }
@@ -39,7 +39,7 @@ public class ValueTypeSerializerTests
     {
         const ushort value = 1;
         var actual = BinaryConvert.Serialize(value);
-        var expected = new byte[] { 0x01, 0x01, 0x00 };
+        var expected = new byte[] { 0x01, 0x00 };
 
         Assert.Equal(expected, actual);
     }
@@ -49,7 +49,7 @@ public class ValueTypeSerializerTests
     {
         const int value = 1;
         var actual = BinaryConvert.Serialize(value);
-        var expected = new byte[] { 0x01, 0x01, 0x00, 0x00, 0x00 };
+        var expected = new byte[] { 0x01, 0x00, 0x00, 0x00 };
 
         Assert.Equal(expected, actual);
     }
@@ -59,7 +59,7 @@ public class ValueTypeSerializerTests
     {
         const uint value = 1;
         var actual = BinaryConvert.Serialize(value);
-        var expected = new byte[] { 0x01, 0x01, 0x00, 0x00, 0x00 };
+        var expected = new byte[] { 0x01, 0x00, 0x00, 0x00 };
 
         Assert.Equal(expected, actual);
     }
@@ -69,7 +69,7 @@ public class ValueTypeSerializerTests
     {
         const long value = 1;
         var actual = BinaryConvert.Serialize(value);
-        var expected = new byte[] { 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        var expected = new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
         Assert.Equal(expected, actual);
     }
@@ -79,7 +79,7 @@ public class ValueTypeSerializerTests
     {
         const ulong value = 1;
         var actual = BinaryConvert.Serialize(value);
-        var expected = new byte[] { 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        var expected = new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
         Assert.Equal(expected, actual);
     }
@@ -89,7 +89,7 @@ public class ValueTypeSerializerTests
     {
         const float value = 1.0f;
         var actual = BinaryConvert.Serialize(value);
-        var expected = new byte[] { 0x01, 0x00, 0x00, 0x80, 0x3f };
+        var expected = new byte[] { 0x00, 0x00, 0x80, 0x3f };
 
         Assert.Equal(expected, actual);
     }
@@ -99,7 +99,7 @@ public class ValueTypeSerializerTests
     {
         const double value = 1.0d;
         var actual = BinaryConvert.Serialize(value);
-        var expected = new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x3f };
+        var expected = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x3f };
 
         Assert.Equal(expected, actual);
     }
@@ -111,7 +111,6 @@ public class ValueTypeSerializerTests
         var actual = BinaryConvert.Serialize(value);
         var expected = new byte[]
         {
-            0x01,
             0x0a, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00,
@@ -122,8 +121,8 @@ public class ValueTypeSerializerTests
     }
 
     [Theory]
-    [InlineData(false, new byte[] { 0x01, 0x00 })]
-    [InlineData(true, new byte[] { 0x01, 0x01 })]
+    [InlineData(false, new byte[] { 0x00 })]
+    [InlineData(true, new byte[] { 0x01 })]
     public void BooleanTest(bool value, byte[] expected)
     {
         var actual = BinaryConvert.Serialize(value);
@@ -136,7 +135,7 @@ public class ValueTypeSerializerTests
     {
         const char value = 'c';
         var actual = BinaryConvert.Serialize(value);
-        var expected = new byte[] { 0x01, 0x63, 0x00 };
+        var expected = new byte[] { 0x63, 0x00 };
 
         Assert.Equal(expected, actual);
     }
@@ -145,40 +144,40 @@ public class ValueTypeSerializerTests
     {
         yield return new object[]
         {
-            new ValueTuple<bool>(true), new byte[] { 0x01, 0x01, 0x01 }
+            new ValueTuple<bool>(true), new byte[] { 0x01 }
         };
         yield return new object[]
         {
-            new ValueTuple<bool, bool>(true, true), new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01 }
+            new ValueTuple<bool, bool>(true, true), new byte[] { 0x01, 0x01 }
         };
         yield return new object[]
         {
-            new ValueTuple<bool, bool, bool>(true, true, true), new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
+            new ValueTuple<bool, bool, bool>(true, true, true), new byte[] { 0x01, 0x01, 0x01 }
         };
         yield return new object[]
         {
             new ValueTuple<bool, bool, bool, bool>(true, true, true, true),
-            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
+            new byte[] { 0x01, 0x01, 0x01, 0x01 }
         };
         yield return new object[]
         {
             new ValueTuple<bool, bool, bool, bool, bool>(true, true, true, true, true),
-            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
+            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01 }
         };
         yield return new object[]
         {
             new ValueTuple<bool, bool, bool, bool, bool, bool>(true, true, true, true, true, true),
-            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
+            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
         };
         yield return new object[]
         {
             new ValueTuple<bool, bool, bool, bool, bool, bool, bool>(true, true, true, true, true, true, true),
-            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
+            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
         };
         yield return new object[]
         {
             new ValueTuple<bool, bool, bool, bool, bool, bool, bool, ValueTuple<bool>>(true, true, true, true, true, true, true, new ValueTuple<bool>(false)),
-            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00}
+            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00 }
         };
     }
 
@@ -186,40 +185,40 @@ public class ValueTypeSerializerTests
     {
         yield return new object[]
         {
-            new Tuple<bool>(true), new byte[] { 0x01, 0x01, 0x01 }
+            new Tuple<bool>(true), new byte[] { 0x01, 0x01 }
         };
         yield return new object[]
         {
-            new Tuple<bool, bool>(true, true), new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01 }
+            new Tuple<bool, bool>(true, true), new byte[] { 0x01, 0x01, 0x01 }
         };
         yield return new object[]
         {
-            new Tuple<bool, bool, bool>(true, true, true), new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
+            new Tuple<bool, bool, bool>(true, true, true), new byte[] { 0x01, 0x01, 0x01, 0x01 }
         };
         yield return new object[]
         {
             new Tuple<bool, bool, bool, bool>(true, true, true, true),
-            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
+            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01 }
         };
         yield return new object[]
         {
             new Tuple<bool, bool, bool, bool, bool>(true, true, true, true, true),
-            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
+            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
         };
         yield return new object[]
         {
             new Tuple<bool, bool, bool, bool, bool, bool>(true, true, true, true, true, true),
-            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
+            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
         };
         yield return new object[]
         {
             new Tuple<bool, bool, bool, bool, bool, bool, bool>(true, true, true, true, true, true, true),
-            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
+            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 }
         };
         yield return new object[]
         {
             new Tuple<bool, bool, bool, bool, bool, bool, bool, Tuple<bool>>(true, true, true, true, true, true, true, new Tuple<bool>(false)),
-            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00}
+            new byte[] { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00 }
         };
     }
 

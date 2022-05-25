@@ -14,6 +14,7 @@
         <RepositoryUrl>https://github.com/ndelta0/BinData</RepositoryUrl>
         <AssemblyVersion>1.0.0.*</AssemblyVersion>
         <Deterministic>false</Deterministic>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
 </Project>
