@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -27,6 +28,8 @@ internal sealed class SerializationContext
         .GetMethod(nameof(BinaryStreamWriter.WritePrimitive))!.MakeGenericMethod(new[] { typeof(int) });
     private static readonly MethodInfo _writeSpan = typeof(Stream)
         .GetMethod(nameof(Stream.Write), new[] { typeof(ReadOnlySpan<byte>) })!;
+    private static readonly MethodInfo _writeStructure = typeof(BinaryStreamWriter)
+        .GetMethod(nameof(BinaryStreamWriter.WriteStructure))!;
 
     public SerializationContext(Type type, WriteMethod write)
     {
@@ -110,6 +113,10 @@ internal sealed class SerializationContext
         else if (info.Type.IsClass)
         {
             AddWriteNullableObjectExpression(info, AddWriteClassExpression);
+        }
+        else if (IsWritableStruct(info.Type, out MethodInfo? writeMethod))
+        {
+            AddWriteStructureExpression(info, writeMethod);
         }
         else
         {
@@ -257,5 +264,30 @@ internal sealed class SerializationContext
         info.Add(Expression.Label(nullLabel));
         info.Add(Expression.Call(info.Stream, _streamWriteByte, _zeroByteExpression));
         info.Add(Expression.Label(endLabel));
+    }
+
+    private static void AddWriteStructureExpression(BuildingInfo info, MethodInfo writeMethod)
+    {
+        info.Add(Expression.Call(null, writeMethod, info.Value, info.Stream));
+    }
+
+    private static bool IsWritableStruct(Type type, [NotNullWhen(true)] out MethodInfo? writeMethod)
+    {
+        if (!type.IsValueType)
+        {
+            writeMethod = null;
+            return false;
+        }
+
+        try
+        {
+            writeMethod = _writeStructure.MakeGenericMethod(new[] { type });
+            return true;
+        }
+        catch
+        {
+            writeMethod = null;
+            return false;
+        }
     }
 }
