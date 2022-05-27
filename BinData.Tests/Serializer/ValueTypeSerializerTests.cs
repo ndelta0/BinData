@@ -140,6 +140,16 @@ public class ValueTypeSerializerTests
         Assert.Equal(expected, actual);
     }
 
+    [Fact]
+    public void DateTimeTest()
+    {
+        var value = new DateTime(256, 8, 16, 0, 32, 4);
+        var actual = BinaryConvert.Serialize(value);
+        var expected = new byte[] { 0x00, 0x1a, 0x26, 0xaa, 0xc4, 0x95, 0x1e, 0x01 };
+
+        Assert.Equal(expected, actual);
+    }
+
     public static IEnumerable<object[]> GetValueTupleData()
     {
         yield return new object[]

@@ -1,5 +1,6 @@
 ﻿using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace BinData;
@@ -80,5 +81,18 @@ internal static class BinaryStreamWriter
 
         stream.Write(buffer);
         stream.Write(bytes);
+    }
+
+    public static unsafe void WriteStructure<T>(T value, Stream stream) where T : unmanaged
+    {
+        Span<byte> buffer = stackalloc byte[sizeof(T)];
+        MemoryMarshal.Write(buffer, ref value);
+
+        if (!BitConverter.IsLittleEndian)
+        {
+            buffer.Reverse();
+        }
+
+        stream.Write(buffer);
     }
 }

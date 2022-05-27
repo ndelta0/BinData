@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -28,6 +29,8 @@ internal sealed class DeserializationContext
         .GetMethod(nameof(BinaryStreamReader.ReadString))!;
     private static readonly MethodInfo _readBytes = typeof(BinaryStreamReader)
         .GetMethod(nameof(BinaryStreamReader.ReadBytes))!;
+    private static readonly MethodInfo _readStructure = typeof(BinaryStreamReader)
+        .GetMethod(nameof(BinaryStreamReader.ReadStructure))!;
 
     public DeserializationContext(Type type, ReadMethod read)
     {
@@ -120,6 +123,10 @@ internal sealed class DeserializationContext
         {
             AddReadNullableObjectExpression(info, AddReadClassExpression);
         }
+        else if (IsReadableStructure(info.Type, out MethodInfo? readMethod))
+        {
+            AddReadStructureExpression(info, readMethod);
+        }
         else
         {
             throw new NotSupportedException($"Unsupported type '{info.Type.FullName}'.");
@@ -175,10 +182,11 @@ internal sealed class DeserializationContext
     private static void AddReadListExpression(BuildingInfo info)
     {
         PropertyInfo indexer = info.Type.GetProperties().FirstOrDefault(prop => prop.GetIndexParameters().Length == 1)!;
+        ConstructorInfo constructor = info.Type.GetConstructor(new[] { typeof(int) })!;
         Type elementType = info.Type.GetGenericArguments()[0];
 
         info.Add(Expression.Assign(info.IteratorEnd, Expression.Call(null, _readInt, info.Stream)));
-        info.Add(Expression.Assign(info.Value, Expression.New(info.Type)));
+        info.Add(Expression.Assign(info.Value, Expression.New(constructor, info.IteratorEnd)));
 
         AddReadForLoopExpression(info, info =>
         {
@@ -289,6 +297,11 @@ internal sealed class DeserializationContext
         }
     }
 
+    private static void AddReadStructureExpression(BuildingInfo info, MethodInfo readMethod)
+    {
+        info.Add(Expression.Assign(info.Value, Expression.Call(null, readMethod, info.Stream)));
+    }
+
     private static Expression ReadToTemporary(BuildingInfo info, Type type)
     {
         ParameterExpression temp = Expression.Variable(type);
@@ -306,5 +319,25 @@ internal sealed class DeserializationContext
         }
 
         return type;
+    }
+
+    private static bool IsReadableStructure(Type type, [NotNullWhen(true)] out MethodInfo? readMethod)
+    {
+        if (!type.IsValueType)
+        {
+            readMethod = null;
+            return false;
+        }
+
+        try
+        {
+            readMethod = _readStructure.MakeGenericMethod(new[] { type });
+            return true;
+        }
+        catch
+        {
+            readMethod = null;
+            return false;
+        }
     }
 }

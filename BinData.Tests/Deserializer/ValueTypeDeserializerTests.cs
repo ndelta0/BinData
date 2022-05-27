@@ -170,6 +170,16 @@ public class ValueTypeDeserializerTests
     }
 
     [Fact]
+    public void TypedDateTimeTest()
+    {
+        var value = new byte[] { 0x00, 0x1a, 0x26, 0xaa, 0xc4, 0x95, 0x1e, 0x01 };
+        var actual = BinaryConvert.Deserialize<DateTime>(value);
+        var expected = new DateTime(256, 8, 16, 0, 32, 4);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
     public void TypedStringTest()
     {
         var value = new byte[]
