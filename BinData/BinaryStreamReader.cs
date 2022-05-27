@@ -107,4 +107,18 @@ internal static class BinaryStreamReader
 
         return bytes;
     }
+
+    public static unsafe T ReadStructure<T>(Stream stream) where T : unmanaged
+    {
+        Span<byte> buffer = stackalloc byte[sizeof(T)];
+        if (stream.Read(buffer) < sizeof(T))
+            ThrowHelper.ThrowEndOfStreamException();
+
+        if (!BitConverter.IsLittleEndian)
+        {
+            buffer.Reverse();
+        }
+
+        return MemoryMarshal.Read<T>(buffer);
+    }
 }
