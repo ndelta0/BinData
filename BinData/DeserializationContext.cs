@@ -182,10 +182,11 @@ internal sealed class DeserializationContext
     private static void AddReadListExpression(BuildingInfo info)
     {
         PropertyInfo indexer = info.Type.GetProperties().FirstOrDefault(prop => prop.GetIndexParameters().Length == 1)!;
+        ConstructorInfo constructor = info.Type.GetConstructor(new[] { typeof(int) })!;
         Type elementType = info.Type.GetGenericArguments()[0];
 
         info.Add(Expression.Assign(info.IteratorEnd, Expression.Call(null, _readInt, info.Stream)));
-        info.Add(Expression.Assign(info.Value, Expression.New(info.Type)));
+        info.Add(Expression.Assign(info.Value, Expression.New(constructor, info.IteratorEnd)));
 
         AddReadForLoopExpression(info, info =>
         {
