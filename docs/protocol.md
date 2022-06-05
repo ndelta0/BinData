@@ -16,9 +16,19 @@ Enumeration types, known as `enum`s in C#, are (de)serialized as a number. Numbe
 
 BinData supports all [C# primitive types](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/built-in-types). All of them are written/read as little-endian. There is a slight exception for the `decimal` type (16-byte floating-point number), which is written/read as four little-endian 4-byte signed integers.
 
+|Type|Value|Bytes|
+|:---|-----|-----|
+|int |1    | 0x01 0x00 0x00 0x00 |
+
 ## Strings
 
 *See [reference types](#reference-types).* Strings are length-prefixed with a little-endian 4-byte signed integer. Length prefix tells you how many bytes there are (not how long the string is). Used encoding is UTF-8.
+
+|Type  |Value |Bytes|
+|:-----|------|-----|
+|string|null  | *0x00* |
+|string|""    | *0x01* 0x00 0x00 0x00 0x00 |
+|string|"Test"| *0x01* 0x04 0x00 0x00 0x00 **0x54 0x65 0x73 0x74** |
 
 ## Arrays and Lists
 
@@ -36,9 +46,18 @@ BinData allows for (de)serialization of `struct`s, **unless** they contain refer
 
 *Don't mistake with [value tuples](#value-tuples). See [reference types](#reference-types).* Tuples (de)serialize their members in the same order as they are declared.
 
+|Type             |Value            |Bytes|
+|:----------------|-----------------|-----|
+|Tuple<bool, bool>|null             | *0x00* |
+|Tuple<bool, bool>|new (true, false)| *0x01* 0x01 0x00 |
+
 ## Value tuples
 
 Value tuples serialize their members in the same order as they are declared.
+
+|Type                  |Value        |Bytes|
+|:---------------------|-------------|-----|
+|ValueTuple<bool, bool>|(true, false)| 0x01 0x00 |
 
 ### Tuples vs. Value tuples
 
