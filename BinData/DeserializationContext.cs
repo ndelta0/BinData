@@ -51,14 +51,12 @@ internal sealed class DeserializationContext
 
         // Create variables
         ParameterExpression value = Expression.Variable(ShadowInterfaces(type));
-        ParameterExpression iterator = Expression.Variable(typeof(int));
-        ParameterExpression iteratorEnd = Expression.Variable(typeof(int));
         ParameterExpression result = Expression.Variable(typeof(object));
-        var variables = new List<ParameterExpression> { value, iterator, iteratorEnd, result };
+        var variables = new List<ParameterExpression> { value, result };
 
         // Create body
         var expressions = new List<Expression>();
-        AddReadExpression(new BuildingInfo(expressions, variables, type, value, streamParameter, iterator, iteratorEnd));
+        AddReadExpression(new BuildingInfo(expressions, variables, type, value, streamParameter));
 
         // Return value as an object
         LabelTarget returnLabel = Expression.Label(typeof(object));
@@ -151,32 +149,40 @@ internal sealed class DeserializationContext
         info.Add(Expression.Assign(info.Value, Expression.Call(null, readPrimitive, info.Stream)));
     }
 
-    private static void AddReadForLoopExpression(BuildingInfo info, Action<BuildingInfo> action)
+    private static void AddReadForLoopExpression(BuildingInfo info, ParameterExpression iteratorEnd, Action<BuildingInfo, ParameterExpression> action)
     {
         LabelTarget condition = Expression.Label();
         LabelTarget end = Expression.Label();
 
-        info.Add(Expression.Assign(info.Iterator, _zeroConstant));
+        ParameterExpression iterator = info.GetVariable(typeof(int));
+
+        info.Add(Expression.Assign(iterator, _zeroConstant));
         info.Add(Expression.Label(condition));
-        info.Add(Expression.IfThen(Expression.Equal(info.Iterator, info.IteratorEnd), Expression.Goto(end)));
+        info.Add(Expression.IfThen(Expression.Equal(iterator, iteratorEnd), Expression.Goto(end)));
 
-        action(info);
+        action(info, iterator);
 
-        info.Add(Expression.PostIncrementAssign(info.Iterator));
+        info.Add(Expression.PostIncrementAssign(iterator));
         info.Add(Expression.Goto(condition));
         info.Add(Expression.Label(end));
+
+        info.DiscardVariable(iterator);
     }
 
     private static void AddReadArrayExpression(BuildingInfo info)
     {
         Type elementType = info.Type.GetElementType()!;
 
-        info.Add(Expression.Assign(info.IteratorEnd, Expression.Call(null, _readInt, info.Stream)));
-        info.Add(Expression.Assign(info.Value, Expression.NewArrayBounds(elementType, info.IteratorEnd)));
+        ParameterExpression iteratorEnd = info.GetVariable(typeof(int));
 
-        AddReadForLoopExpression(info, info =>
-            AddReadExpression(info with { Type = elementType, Value = Expression.ArrayAccess(info.Value, info.Iterator) })
+        info.Add(Expression.Assign(iteratorEnd, Expression.Call(null, _readInt, info.Stream)));
+        info.Add(Expression.Assign(info.Value, Expression.NewArrayBounds(elementType, iteratorEnd)));
+
+        AddReadForLoopExpression(info, iteratorEnd, (info, iterator) =>
+            AddReadExpression(info with { Type = elementType, Value = Expression.ArrayAccess(info.Value, iterator) })
         );
+
+        info.DiscardVariable(iteratorEnd);
     }
 
     private static void AddReadListExpression(BuildingInfo info)
@@ -185,15 +191,19 @@ internal sealed class DeserializationContext
         ConstructorInfo constructor = info.Type.GetConstructor(new[] { typeof(int) })!;
         Type elementType = info.Type.GetGenericArguments()[0];
 
-        info.Add(Expression.Assign(info.IteratorEnd, Expression.Call(null, _readInt, info.Stream)));
-        info.Add(Expression.Assign(info.Value, Expression.New(constructor, info.IteratorEnd)));
+        ParameterExpression iteratorEnd = info.GetVariable(typeof(int));
 
-        AddReadForLoopExpression(info, info =>
+        info.Add(Expression.Assign(iteratorEnd, Expression.Call(null, _readInt, info.Stream)));
+        info.Add(Expression.Assign(info.Value, Expression.New(constructor, iteratorEnd)));
+
+        AddReadForLoopExpression(info, iteratorEnd, (info, _) =>
         {
             Expression tempVariable = ReadToTemporary(info, elementType);
             MethodInfo add = info.Type.GetMethod("Add")!;
             info.Add(Expression.Call(info.Value, add, tempVariable));
         });
+
+        info.DiscardVariable(iteratorEnd);
     }
 
     private static void AddReadNullableObjectExpression(BuildingInfo info, Action<BuildingInfo> action)
@@ -201,15 +211,19 @@ internal sealed class DeserializationContext
         LabelTarget notNullLabel = Expression.Label();
         LabelTarget endLabel = Expression.Label();
 
-        info.Add(Expression.Assign(info.Iterator, Expression.Call(info.Stream, _readByte)));
-        info.Add(Expression.IfThen(Expression.Equal(info.Iterator, _minusOneConstant), Expression.Call(null, _throwEndOfStreamException)));
-        info.Add(Expression.IfThen(Expression.Equal(info.Iterator, _oneConstant), Expression.Goto(notNullLabel)));
+        ParameterExpression nullabilityPrefix = info.GetVariable(typeof(int));
+
+        info.Add(Expression.Assign(nullabilityPrefix, Expression.Call(info.Stream, _readByte)));
+        info.Add(Expression.IfThen(Expression.Equal(nullabilityPrefix, _minusOneConstant), Expression.Call(null, _throwEndOfStreamException)));
+        info.Add(Expression.IfThen(Expression.Equal(nullabilityPrefix, _oneConstant), Expression.Goto(notNullLabel)));
         info.Add(Expression.Assign(info.Value, Expression.Constant(null, info.Type)));
         info.Add(Expression.Goto(endLabel));
 
         info.Add(Expression.Label(notNullLabel));
         action(info);
         info.Add(Expression.Label(endLabel));
+
+        info.DiscardVariable(nullabilityPrefix);
     }
 
     private static void AddReadStringExpression(BuildingInfo info)
@@ -255,9 +269,11 @@ internal sealed class DeserializationContext
         LabelTarget notNullLabel = Expression.Label();
         LabelTarget endLabel = Expression.Label();
 
-        info.Add(Expression.Assign(info.Iterator, Expression.Call(info.Stream, _readByte)));
-        info.Add(Expression.IfThen(Expression.Equal(info.Iterator, _minusOneConstant), Expression.Call(null, _throwEndOfStreamException)));
-        info.Add(Expression.IfThen(Expression.Equal(info.Iterator, _oneConstant), Expression.Goto(notNullLabel)));
+        ParameterExpression nullabilityPrefix = info.GetVariable(typeof(int));
+
+        info.Add(Expression.Assign(nullabilityPrefix, Expression.Call(info.Stream, _readByte)));
+        info.Add(Expression.IfThen(Expression.Equal(nullabilityPrefix, _minusOneConstant), Expression.Call(null, _throwEndOfStreamException)));
+        info.Add(Expression.IfThen(Expression.Equal(nullabilityPrefix, _oneConstant), Expression.Goto(notNullLabel)));
         info.Add(Expression.Assign(info.Value, Expression.New(info.Type)));
         info.Add(Expression.Goto(endLabel));
 
@@ -266,6 +282,8 @@ internal sealed class DeserializationContext
         ConstructorInfo constructor = info.Type.GetConstructor(genericArguments)!;
         info.Add(Expression.Assign(info.Value, Expression.New(constructor, ReadToTemporary(info, genericArguments[0]))));
         info.Add(Expression.Label(endLabel));
+
+        info.DiscardVariable(nullabilityPrefix);
     }
 
     private static void AddReadClassExpression(BuildingInfo info)

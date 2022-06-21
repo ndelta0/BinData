@@ -51,13 +51,12 @@ internal sealed class SerializationContext
 
         // Create variables
         ParameterExpression value = Expression.Variable(type);
-        ParameterExpression iterator = Expression.Variable(typeof(int));
-        var variables = new List<ParameterExpression> { value, iterator };
+        var variables = new List<ParameterExpression> { value };
 
         // Create body
         var expressions = new List<Expression>();
         expressions.Add(Expression.Assign(value, Expression.Convert(valueParameter, type)));
-        AddWriteExpression(new BuildingInfo(expressions, variables, type, value, streamParameter, iterator, null!));
+        AddWriteExpression(new BuildingInfo(expressions, variables, type, value, streamParameter));
         BlockExpression block = Expression.Block(variables, expressions);
 
         // Compile expressions
@@ -187,33 +186,37 @@ internal sealed class SerializationContext
         }
     }
 
-    private static void AddWriteListExpression(BuildingInfo info)
+    private static void AddWriteListExpression(BuildingInfo info, ParameterExpression iterator)
     {
         PropertyInfo indexer = info.Type.GetProperties().FirstOrDefault(prop => prop.GetIndexParameters().Length == 1)!;
-        AddWriteExpression(info with { Type = info.Type.GetGenericArguments()[0], Value = Expression.Property(info.Value, indexer, info.Iterator) });
+        AddWriteExpression(info with { Type = info.Type.GetGenericArguments()[0], Value = Expression.Property(info.Value, indexer, iterator) });
     }
 
-    private static void AddWriteArrayExpression(BuildingInfo info)
+    private static void AddWriteArrayExpression(BuildingInfo info, ParameterExpression iterator)
     {
-        AddWriteExpression(info with { Type = info.Type.GetElementType()!, Value = Expression.ArrayIndex(info.Value, info.Iterator) });
+        AddWriteExpression(info with { Type = info.Type.GetElementType()!, Value = Expression.ArrayIndex(info.Value, iterator) });
     }
 
-    private static void AddWriteForLoopExpression(BuildingInfo info, string lengthPropertyName, Action<BuildingInfo> action)
+    private static void AddWriteForLoopExpression(BuildingInfo info, string lengthPropertyName, Action<BuildingInfo, ParameterExpression> action)
     {
         LabelTarget condition = Expression.Label();
         LabelTarget end = Expression.Label();
 
+        ParameterExpression iterator = info.GetVariable(typeof(int));
+
         info.Add(Expression.Call(null, _writeInt, Expression.Property(info.Value, lengthPropertyName), info.Stream));
 
-        info.Add(Expression.Assign(info.Iterator, _zeroIntegerExpression));
+        info.Add(Expression.Assign(iterator, _zeroIntegerExpression));
         info.Add(Expression.Label(condition));
-        info.Add(Expression.IfThen(Expression.Equal(info.Iterator, Expression.Property(info.Value, lengthPropertyName)), Expression.Goto(end)));
+        info.Add(Expression.IfThen(Expression.Equal(iterator, Expression.Property(info.Value, lengthPropertyName)), Expression.Goto(end)));
 
-        action(info);
+        action(info, iterator);
 
-        info.Add(Expression.PostIncrementAssign(info.Iterator));
+        info.Add(Expression.PostIncrementAssign(iterator));
         info.Add(Expression.Goto(condition));
         info.Add(Expression.Label(end));
+
+        info.DiscardVariable(iterator);
     }
 
     private static void AddWriteByteArrayExpression(BuildingInfo info)
