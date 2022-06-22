@@ -300,12 +300,12 @@ internal sealed class DeserializationContext
     private static void AddReadClassExpression(BuildingInfo info)
     {
         IEnumerable<PropertyInfo> properties = info.Type
-                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                .Where(x =>
-                    x.GetCustomAttribute<NotSerializedAttribute>() is null &&
-                    x.GetMethod is not null &&
-                    (x.GetMethod?.IsPublic ?? false) &&
-                    (x.SetMethod?.IsPublic ?? false));
+            .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            .Where(x =>
+                x.GetCustomAttribute<NotSerializedAttribute>() is null &&
+                x.GetMethod is not null &&
+                (x.GetMethod?.IsPublic ?? false) &&
+                (x.SetMethod?.IsPublic ?? false));
 
         info.Add(Expression.Assign(info.Value, Expression.New(info.Type)));
 
