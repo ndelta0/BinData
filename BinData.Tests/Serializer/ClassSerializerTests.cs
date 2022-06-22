@@ -69,6 +69,36 @@ public class ClassSerializerTests
 
         Assert.Equal(expected, actual);
     }
+
+    [Fact]
+    public void LinkedClassTest()
+    {
+        var value = new LinkedClass
+        {
+            Link = new LinkedClass
+            {
+                Link = new LinkedClass
+                {
+                    Link = null
+                }
+            }
+        };
+
+        var actual = BinaryConvert.Serialize(value);
+
+        var expected = new byte[]
+        {
+            0x01,
+            0x01,
+            0x01,
+            0x00
+        };
+    }
+}
+
+public class LinkedClass
+{
+    public LinkedClass? Link { get; init; }
 }
 
 public class PocoClass

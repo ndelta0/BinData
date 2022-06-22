@@ -4,6 +4,8 @@ namespace BinData;
 
 internal record BuildingInfo(List<Expression> Expressions, List<ParameterExpression> Variables, Type Type, Expression Value, ParameterExpression Stream)
 {
+    public bool IsTopLevel { get; init; } = true;
+
     private Dictionary<Type, Stack<ParameterExpression>>? variablesCache;
 
     public void Add(Expression expression)

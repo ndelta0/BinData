@@ -1,4 +1,6 @@
-﻿namespace BinData.Tests.Deserializer;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace BinData.Tests.Deserializer;
 
 public class ClassDeserializerTests
 {
@@ -178,6 +180,53 @@ public class ClassDeserializerTests
         Assert.Equal(expected.InnerClass.Int, typed.InnerClass.Int);
         Assert.Equal(expected.InnerClass.Bool, typed.InnerClass.Bool);
         Assert.Equal(expected.InnerClass.ShortExplicit, typed.InnerClass.ShortExplicit);
+    }
+
+    [Fact]
+    public void LinkedClassTest()
+    {
+        var value = new byte[]
+        {
+            0x01,
+            0x01,
+            0x01,
+            0x00
+        };
+
+        var actual = BinaryConvert.Deserialize<LinkedClass>(value);
+
+        var expected = new LinkedClass
+        {
+            Link = new LinkedClass
+            {
+                Link = new LinkedClass
+                {
+                    Link = null
+                }
+            }
+        };
+
+        Assert.Equal(expected, actual, LinkedClass.Comparer);
+    }
+}
+
+public class LinkedClass
+{
+    public static IEqualityComparer<LinkedClass?> Comparer => new LinkedClassComparer();
+
+    public LinkedClass? Link { get; init; }
+
+    private class LinkedClassComparer : IEqualityComparer<LinkedClass?>
+    {
+        public bool Equals(LinkedClass? x, LinkedClass? y)
+        {
+            return (x is null) == (y is null);
+        }
+
+        public int GetHashCode([DisallowNull] LinkedClass obj)
+        {
+            return default;
+        }
     }
 }
 

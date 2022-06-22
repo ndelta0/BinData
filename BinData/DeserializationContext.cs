@@ -31,6 +31,8 @@ internal sealed class DeserializationContext
         .GetMethod(nameof(BinaryStreamReader.ReadBytes))!;
     private static readonly MethodInfo _readStructure = typeof(BinaryStreamReader)
         .GetMethod(nameof(BinaryStreamReader.ReadStructure))!;
+    private static readonly MethodInfo _deserialize = typeof(BinaryConvert)
+        .GetMethod(nameof(BinaryConvert.Deserialize), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     public DeserializationContext(Type type, ReadMethod read)
     {
@@ -119,7 +121,16 @@ internal sealed class DeserializationContext
         }
         else if (info.Type.IsClass)
         {
-            AddReadNullableObjectExpression(info, AddReadClassExpression);
+            if (info.IsTopLevel)
+            {
+                AddReadNullableObjectExpression(info with { IsTopLevel = false }, AddReadClassExpression);
+            }
+            else
+            {
+                // Call to BinaryConvert.Deserialize
+                MethodInfo deserializationMethod = _deserialize.MakeGenericMethod(info.Type);
+                info.Add(Expression.Assign(info.Value, Expression.Call(deserializationMethod, info.Stream)));
+            }
         }
         else if (IsReadableStructure(info.Type, out MethodInfo? readMethod))
         {
@@ -289,12 +300,12 @@ internal sealed class DeserializationContext
     private static void AddReadClassExpression(BuildingInfo info)
     {
         IEnumerable<PropertyInfo> properties = info.Type
-            .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-            .Where(x =>
-                x.GetCustomAttribute<NotSerializedAttribute>() is null &&
-                x.GetMethod is not null &&
-                (x.GetMethod?.IsPublic ?? false) &&
-                (x.SetMethod?.IsPublic ?? false));
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Where(x =>
+                    x.GetCustomAttribute<NotSerializedAttribute>() is null &&
+                    x.GetMethod is not null &&
+                    (x.GetMethod?.IsPublic ?? false) &&
+                    (x.SetMethod?.IsPublic ?? false));
 
         info.Add(Expression.Assign(info.Value, Expression.New(info.Type)));
 
