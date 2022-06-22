@@ -93,12 +93,14 @@ public class ClassSerializerTests
             0x01,
             0x00
         };
+
+        Assert.Equal(expected, actual);
     }
 }
 
 public class LinkedClass
 {
-    public LinkedClass? Link { get; init; }
+    public LinkedClass? Link { get; set; }
 }
 
 public class PocoClass
