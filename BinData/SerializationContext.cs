@@ -30,6 +30,8 @@ internal sealed class SerializationContext
         .GetMethod(nameof(Stream.Write), new[] { typeof(ReadOnlySpan<byte>) })!;
     private static readonly MethodInfo _writeStructure = typeof(BinaryStreamWriter)
         .GetMethod(nameof(BinaryStreamWriter.WriteStructure))!;
+    private static readonly MethodInfo _serialize = typeof(BinaryConvert)
+        .GetMethod(nameof(BinaryConvert.Serialize), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     public SerializationContext(Type type, WriteMethod write)
     {
@@ -111,7 +113,16 @@ internal sealed class SerializationContext
         }
         else if (info.Type.IsClass)
         {
-            AddWriteNullableObjectExpression(info, AddWriteClassExpression);
+            if (info.IsTopLevel)
+            {
+                AddWriteNullableObjectExpression(info with { IsTopLevel = false }, AddWriteClassExpression);
+            }
+            else
+            {
+                // Call to BinaryConvert.Serialize
+                MethodInfo serializationMethod = _serialize.MakeGenericMethod(info.Type);
+                info.Add(Expression.Call(serializationMethod, info.Value, info.Stream));
+            }
         }
         else if (IsWritableStruct(info.Type, out MethodInfo? writeMethod))
         {
