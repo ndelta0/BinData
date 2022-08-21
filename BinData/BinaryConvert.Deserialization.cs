@@ -11,4 +11,10 @@ public static partial class BinaryConvert
         var context = DeserializationContext.Create(type);
         return context.Read(ms);
     }
+
+    internal static T? Deserialize<T>(Stream stream)
+    {
+        var context = DeserializationContext.Create(typeof(T));
+        return (T?)context.Read(stream);
+    }
 }

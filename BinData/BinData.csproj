@@ -12,9 +12,19 @@
         <PackageProjectUrl>https://github.com/ndelta0/BinData</PackageProjectUrl>
         <PackageLicenseUrl>https://choosealicense.com/licenses/mit/</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/ndelta0/BinData</RepositoryUrl>
-        <AssemblyVersion>2.0.0.*</AssemblyVersion>
+        <AssemblyVersion>2.2.0.*</AssemblyVersion>
         <Deterministic>false</Deterministic>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <SourceControlInformationFeatureSupported>true</SourceControlInformationFeatureSupported>
+        <PackageVersion>2.2.0</PackageVersion>
+        <ProductVersion>2.2.0</ProductVersion>
+        <RepositoryType>git</RepositoryType>
     </PropertyGroup>
+
+    <Target Name="SetSourceRevisionId" BeforeTargets="InitializeSourceControlInformation">
+        <Exec Command="git describe --long --always --dirty --exclude=* --abbrev=8" ConsoleToMSBuild="true" IgnoreExitCode="false">
+            <Output TaskParameter="ConsoleOutput" PropertyName="SourceRevisionId" />
+        </Exec>
+    </Target>
 
 </Project>
